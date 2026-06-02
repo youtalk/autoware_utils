@@ -52,6 +52,26 @@ TEST(UUIDHelperTest, to_hex_string)
 
   // Check if the generated hex string is correct
   EXPECT_EQ(hex_string, "42424242424242424242424242424242");
+
+  // Sequential bytes pin zero-padding of values < 0x10 (e.g. 0x01 -> "01").
+  unique_identifier_msgs::msg::UUID sequential_uuid;
+  for (size_t i = 0; i < sequential_uuid.uuid.size(); ++i) {
+    sequential_uuid.uuid[i] = static_cast<uint8_t>(i);
+  }
+  EXPECT_EQ(
+    autoware_utils_uuid::to_hex_string(sequential_uuid), "000102030405060708090a0b0c0d0e0f");
+
+  // All 0xAB pins lowercase hex digits.
+  unique_identifier_msgs::msg::UUID lowercase_uuid;
+  std::fill(lowercase_uuid.uuid.begin(), lowercase_uuid.uuid.end(), 0xAB);
+  // cspell:disable-next-line
+  EXPECT_EQ(autoware_utils_uuid::to_hex_string(lowercase_uuid), "abababababababababababababababab");
+
+  // Mixed bytes with a leading 0x0A pin zero-padding combined with lowercase ("0a").
+  unique_identifier_msgs::msg::UUID mixed_uuid;
+  mixed_uuid.uuid = {0x0a, 0xff, 0x10, 0x00, 0x9c, 0x07, 0xde, 0xad,
+                     0xbe, 0xef, 0x01, 0x23, 0x45, 0x67, 0x89, 0xa0};
+  EXPECT_EQ(autoware_utils_uuid::to_hex_string(mixed_uuid), "0aff10009c07deadbeef0123456789a0");
 }
 
 TEST(UUIDHelperTest, to_boost_uuid)

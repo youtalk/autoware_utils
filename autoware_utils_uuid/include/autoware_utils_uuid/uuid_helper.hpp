@@ -20,6 +20,7 @@
 #include <boost/uuid/uuid.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <random>
 #include <string>
@@ -48,11 +49,13 @@ inline unique_identifier_msgs::msg::UUID generate_default_uuid()
 }
 inline std::string to_hex_string(const unique_identifier_msgs::msg::UUID & id)
 {
-  std::stringstream ss;
-  for (auto i = 0; i < 16; ++i) {
-    ss << std::hex << std::setfill('0') << std::setw(2) << +id.uuid[i];
+  static constexpr char hex_chars[] = "0123456789abcdef";
+  std::string s(2 * id.uuid.size(), '0');
+  for (size_t i = 0; i < id.uuid.size(); ++i) {
+    s[2 * i] = hex_chars[(id.uuid[i] >> 4) & 0x0F];
+    s[2 * i + 1] = hex_chars[id.uuid[i] & 0x0F];
   }
-  return ss.str();
+  return s;
 }
 
 inline boost::uuids::uuid to_boost_uuid(const unique_identifier_msgs::msg::UUID & id)
